@@ -1,5 +1,5 @@
 import numpy as num_py
-
+from NeuralNetwork import NeuralNetwork
 
 def sigmoid(x):
     return 1 / (1 + num_py.exp(-x))
