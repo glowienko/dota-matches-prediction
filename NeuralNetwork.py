@@ -1,5 +1,6 @@
 from numpy import random, exp, dot, array, power, zeros, newaxis
 from random import shuffle
+import json, codecs
 
 
 def sigmoid(x):
@@ -31,6 +32,7 @@ class NeuralNetwork:
         self.batch_size = batch_size
 
     def feed_forward(self, inputData):
+        inputData = array(inputData)[newaxis].transpose()
         first_result = sigmoid(dot(self.first_weights, inputData) + self.second_biases)
         result = sigmoid(dot(self.second_weights, first_result) + self.third_biases)
         return result
@@ -90,29 +92,16 @@ class NeuralNetwork:
 
                 self.updateWeights(g1, g2, b2, b3)
 
+    def saveState(self, fileName):
+        state = {'first_weights': self.first_weights.tolist(),
+                 'second_weights': self.second_weights.tolist(),
+                 'second_biases': self.second_biases.tolist(), 'third_biases': self.third_biases.tolist()}
+        json.dump(state, codecs.open(fileName, 'w', encoding='utf-8'))
 
-neural_network = NeuralNetwork()
-trainData = [([0], [1, 0, 0]), ([1], [0, 1, 0]), ([2], [0, 0, 1])]
-
-neural_network.init_layers(1, 20, 3)
-neural_network.init_weights()
-neural_network.init_biases()
-neural_network.init_parameters(0.001, 300000, 3)
-
-result1a = neural_network.feed_forward([[0]])
-result1b = neural_network.feed_forward([[1]])
-result1c = neural_network.feed_forward([[2]])
-print(f'Result1:\n'
-      f'0: {result1a}\n'
-      f'1: {result1b}\n'
-      f'2: {result1c}')
-
-neural_network.train(trainData)
-
-result2a = neural_network.feed_forward([[0]])
-result2b = neural_network.feed_forward([[1]])
-result2c = neural_network.feed_forward([[2]])
-print(f'Result2:\n'
-      f'0: {result2a}\n'
-      f'1: {result2b}\n'
-      f'2: {result2c}')
+    def loadState(self, fileName):
+        state = codecs.open(fileName, 'r', encoding='utf-8').read()
+        state = json.loads(state)
+        self.first_weights = array(state['first_weights'])
+        self.second_weights = array(state['second_weights'])
+        self.second_biases = array(state['second_biases'])
+        self.third_biases = array(state['third_biases'])
