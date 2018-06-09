@@ -1,4 +1,4 @@
-from numpy import random, exp, dot, array, power, zeros, newaxis
+from numpy import random, exp, dot, array, power, zeros, newaxis, concatenate
 from random import shuffle
 import json, codecs
 
@@ -19,89 +19,90 @@ class NeuralNetwork:
         self.output_layer_neuron_number = third_layer_neurons_number
 
     def init_weights(self):
-        self.first_weights = 2 * random.random((self.hidden_layer_neuron_number, self.input_layer_neuron_number)) - 1
-        self.second_weights = 2 * random.random((self.output_layer_neuron_number, self.hidden_layer_neuron_number)) - 1
-
-    def init_biases(self):
-        self.second_biases = 2 * random.random((self.hidden_layer_neuron_number, 1)) - 1
-        self.third_biases = 2 * random.random((self.output_layer_neuron_number, 1)) - 1
+        self.hidden_weights = 2 * random.random(
+            (self.hidden_layer_neuron_number, self.input_layer_neuron_number + 1)) - 1
+        self.output_weights = 2 * random.random(
+            (self.output_layer_neuron_number, self.hidden_layer_neuron_number + 1)) - 1
 
     def init_parameters(self, eta, epochs, batch_size):
         self.eta = eta
         self.epochs = epochs
         self.batch_size = batch_size
 
-    def feed_forward(self, inputData):
-        inputData = array(inputData)[newaxis].transpose()
-        first_result = sigmoid(dot(self.first_weights, inputData) + self.second_biases)
-        result = sigmoid(dot(self.second_weights, first_result) + self.third_biases)
-        return result
+    def feed_forward(self, y0):
+        y0 = array(y0)[newaxis].transpose()
+        y0 = concatenate((y0, [[1]]))
+        s1 = dot(self.hidden_weights, y0)
+        y1 = sigmoid(s1)
+        y1 = concatenate((y1, [[1]]))
+        s2 = dot(self.output_weights, y1)
+        y2 = s2  # activation function is linear
+        return y2
 
-    def backpropagate(self, inputData, outputData):
-        # g2 = [zeros(weight.shape) for weight in self.second_weights]
-        # g1 = [zeros(weight.shape) for weight in self.first_weights]
+    def backpropagate(self, inputData, expectedOutput):
 
-        A1 = inputData
-        Z1 = dot(self.first_weights, A1) + self.second_biases
-        A2 = sigmoid(Z1)
-        Z2 = dot(self.second_weights, A2) + self.third_biases
-        A3 = sigmoid(Z2)
+        #             sig          f.liniowa
+        # y0  ->  s1  ->  y1  ->  s2  ->  y2  -> q
+        # w1  ->          w2  ->
 
-        d2 = (A3 - outputData) * sigmoid_derivative(Z2)
-        g2 = dot(d2, A2.transpose())
+        y0 = inputData
+        y0 = concatenate((y0, [[1]]))
+        s1 = dot(self.hidden_weights, y0)
+        y1 = sigmoid(s1)
+        y1 = concatenate((y1, [[1]]))
+        s2 = dot(self.output_weights, y1)
+        y2 = s2  # activation function is linear
 
-        d1 = dot(self.second_weights.transpose(), d2) * sigmoid_derivative(Z1)
-        g1 = dot(d1, A1.transpose())
+        dq_dy2 = (y2 - expectedOutput)
+        dq_ds2 = dq_dy2
+        dq_dw2 = dot(dq_ds2, y1.transpose())
 
-        return g1, g2, d1, d2
+        dq_dy1 = dot(self.output_weights.transpose(), dq_ds2)
+        dq_ds1 = dq_dy1[:-1] * sigmoid_derivative(s1)
+        dq_dw1 = dot(dq_ds1, y0.transpose())
 
-    def updateWeights(self, gradient1, gradient2, biases2, biases3):
-        for i in range(len(self.first_weights)):
-            for x in range(len(self.first_weights[i])):
-                self.first_weights[i, x] = self.first_weights[i, x] - self.eta * gradient1[i, x] / self.batch_size
+        return dq_dw1, dq_dw2
 
-        for i in range(len(self.second_weights)):
-            for x in range(len(self.second_weights[i])):
-                self.second_weights[i, x] = self.second_weights[i, x] - self.eta * gradient2[i, x] / self.batch_size
+    def updateWeights(self, gradient1, gradient2):
+        for i in range(len(self.hidden_weights)):
+            for x in range(len(self.hidden_weights[i])):
+                self.hidden_weights[i, x] = self.hidden_weights[i, x] - self.eta * gradient1[i, x] / self.batch_size
 
-        self.second_biases = self.second_biases - self.eta * biases2 / self.batch_size
-        self.third_biases = self.third_biases - self.eta * biases3 / self.batch_size
+        for i in range(len(self.output_weights)):
+            for x in range(len(self.output_weights[i])):
+                self.output_weights[i, x] = self.output_weights[i, x] - self.eta * gradient2[i, x] / self.batch_size
 
     def train(self, trainData):
 
         for i in range(self.epochs):
 
+            if i % 10000 == 0:
+                print('In progress: ', i)
+
             shuffle(trainData)
 
             for batch_num in range(0, len(trainData), self.batch_size):
 
-                g1 = zeros(self.first_weights.shape)
-                g2 = zeros(self.second_weights.shape)
-                b2 = zeros(self.second_biases.shape)
-                b3 = zeros(self.third_biases.shape)
+                g1 = zeros(self.hidden_weights.shape)
+                g2 = zeros(self.output_weights.shape)
 
                 for data in trainData[batch_num:batch_num + self.batch_size]:
                     inputData = array(data[0])[newaxis].transpose()
                     outputData = array(data[1])[newaxis].transpose()
 
-                    tg1, tg2, tb2, tb3 = self.backpropagate(inputData, outputData)
+                    tg1, tg2 = self.backpropagate(inputData, outputData)
                     g1 = g1 + tg1
                     g2 = g2 + tg2
-                    b2 = b2 + tb2
-                    b3 = b3 + tb3
 
-                self.updateWeights(g1, g2, b2, b3)
+                self.updateWeights(g1, g2)
 
     def saveState(self, fileName):
-        state = {'first_weights': self.first_weights.tolist(),
-                 'second_weights': self.second_weights.tolist(),
-                 'second_biases': self.second_biases.tolist(), 'third_biases': self.third_biases.tolist()}
+        state = {'first_weights': self.hidden_weights.tolist(),
+                 'second_weights': self.output_weights.tolist()}
         json.dump(state, codecs.open(fileName, 'w', encoding='utf-8'))
 
     def loadState(self, fileName):
         state = codecs.open(fileName, 'r', encoding='utf-8').read()
         state = json.loads(state)
-        self.first_weights = array(state['first_weights'])
-        self.second_weights = array(state['second_weights'])
-        self.second_biases = array(state['second_biases'])
-        self.third_biases = array(state['third_biases'])
+        self.hidden_weights = array(state['first_weights'])
+        self.output_weights = array(state['second_weights'])
