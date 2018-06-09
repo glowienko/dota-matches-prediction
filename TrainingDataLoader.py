@@ -62,3 +62,6 @@ class TrainingDataLoader:
     def loadTrainingSetsFromFile(self, filename):
         training_data = codecs.open(filename, 'r', encoding='utf-8').read()
         return json.loads(training_data)
+
+    def get_network_input_for_teams(self, first_team, second_team):
+        pass

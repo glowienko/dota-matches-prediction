@@ -21,6 +21,20 @@ neural_network.train(training_data)
 result2 = neural_network.feed_forward([4, 6, 2, 5, 1043.88, 1029.81, 31, 22])
 print('result 2 : \n', result2)
 
+print('Lets predicate some matches!')
+print('Give first team name')
+first_team = input()
+print('Give second team name')
+second_team = input()
+
+network_input = data_loader.get_network_input_for_teams(first_team, second_team)
+results = neural_network.feed_forward(network_input)
+
+print('Your match predicion:\n')
+print('team: ', first_team, ' has ', results[0], '% for win:\n')
+print('team: ', second_team, ' has ', results[1], '% for win:\n')
+
+
 # trainInput = [[1, 0, 0, 0, 0, 0],
 #               [1, 1, 0, 0, 0, 0],
 #               [1, 0, 0, 1, 0, 0],
