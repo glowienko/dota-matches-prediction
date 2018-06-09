@@ -4,21 +4,19 @@ from TrainingDataLoader import TrainingDataLoader
 neural_network = NeuralNetwork()
 data_loader = TrainingDataLoader()
 
-data_loader.generateTrainingDataFile()
+# data_loader.generateTrainingDataFile()
 training_data = data_loader.loadTrainingSetsFromFile('dota_training_set')
 
-print(training_data)
-
-neural_network.init_layers(8, 28, 2)
+neural_network.init_layers(6, 20, 2)
 neural_network.init_weights()
-neural_network.init_parameters(0.1, 50000, 10)
+neural_network.init_parameters(0.1, 10000, 10)
 
-result1 = neural_network.feed_forward([4, 6, 2, 5, 1043.88, 1029.81, 31, 22])
+result1 = neural_network.feed_forward([4, 9, 4, 2, 1014.99, 1091.65])
 print('result 1 : \n', result1)
 
 neural_network.train(training_data)
 
-result2 = neural_network.feed_forward([4, 6, 2, 5, 1043.88, 1029.81, 31, 22])
+result2 = neural_network.feed_forward([4, 9, 4, 2, 1014.99, 1091.65])
 print('result 2 : \n', result2)
 
 print('Lets predicate some matches!')
