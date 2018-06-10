@@ -6,32 +6,35 @@ data_loader = TrainingDataLoader()
 
 # data_loader.generateTrainingDataFile()
 training_data = data_loader.loadTrainingSetsFromFile('dota_training_set')
-
-neural_network.init_layers(6, 20, 2)
+#
+# print(len(training_data))
+#
+neural_network.init_layers(6, 10, 2)
 neural_network.init_weights()
-neural_network.init_parameters(0.1, 10000, 10)
+neural_network.init_parameters(0.01, 100, 100)
+#neural_network.loadState('long_time')
 
-result1 = neural_network.feed_forward([4, 9, 4, 2, 1014.99, 1091.65])
+result1 = neural_network.feed_forward([152, 131, 100, 98, 1427.02, 1261.34])
 print('result 1 : \n', result1)
 
 neural_network.train(training_data)
+# neural_network.saveState('long_time')
 
-result2 = neural_network.feed_forward([4, 9, 4, 2, 1014.99, 1091.65])
+result2 = neural_network.feed_forward([152, 131, 100, 98, 1427.02, 1261.34])
 print('result 2 : \n', result2)
 
-print('Lets predicate some matches!')
-print('Give first team name')
-first_team = input()
-print('Give second team name')
-second_team = input()
-
-network_input = data_loader.get_network_input_for_teams(first_team, second_team)
-results = neural_network.feed_forward(network_input)
-
-print('Your match predicion:\n')
-print('team: ', first_team, ' has ', results[0], '% for win:\n')
-print('team: ', second_team, ' has ', results[1], '% for win:\n')
-
+# print('Lets predicate some matches!')
+# print('Give first team name')
+# first_team = input()
+# print('Give second team name')
+# second_team = input()
+#
+# network_input = data_loader.get_network_input_for_teams(first_team, second_team)
+# results = neural_network.feed_forward(network_input)
+#
+# print('Your match predicion:\n')
+# print('team: ', first_team, ' has ', results[0], '% for win:\n')
+# print('team: ', second_team, ' has ', results[1], '% for win:\n')
 
 # trainInput = [[1, 0, 0, 0, 0, 0],
 #               [1, 1, 0, 0, 0, 0],

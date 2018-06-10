@@ -9,19 +9,23 @@ class TrainingDataLoader:
     base_api_url = 'https://api.opendota.com/api'
     pro_matches = '/proMatches'  # list of matches - playing teams id, match duration, match result
     teams = '/teams'  # list of teams - id, rating, wins, losses
+    last_id = 3942922478
+    query = '?less_than_match_id='
 
     def evaluate_match_results(self, match):
-        result = match['radiant_win']
+        try:
+            result = match['radiant_win']
 
-        if result:
-            return [1, 0]
-        return [0, 1]
+            if result:
+                return [1, 0]
+            return [0, 1]
+        except:
+            return []
 
     def evaluate_input_layer(self, match):
-        r_team_id = match['radiant_team_id']
-        d_team_id = match['dire_team_id']
-
         try:
+            r_team_id = match['radiant_team_id']
+            d_team_id = match['dire_team_id']
             r_team_info = requests.get(self.base_api_url + self.teams + '/' + str(r_team_id)).json()
             d_team_info = requests.get(self.base_api_url + self.teams + '/' + str(d_team_id)).json()
 
@@ -54,22 +58,28 @@ class TrainingDataLoader:
         print('training sets saved to file!')
 
     def generateTrainingDataFile(self):
-        matches = requests.get(self.base_api_url + self.pro_matches).json()
+
         dota_training_data_list = list()
         name_id_dict = dict()
 
-        for index, match in enumerate(matches):
-            input_layer = self.evaluate_input_layer(match)
-            expected_output = self.evaluate_match_results(match)
-            sleep(1)
+        for i in range(100):
+            matches = requests.get(
+                self.base_api_url + self.pro_matches + self.query + str(self.last_id - i * 100000)).json()
 
-            if not input_layer:
-                continue
+            for index, match in enumerate(matches):
+                input_layer = self.evaluate_input_layer(match)
+                expected_output = self.evaluate_match_results(match)
+                sleep(1.5)
 
-            training_set = (input_layer[0], expected_output)
-            dota_training_data_list.append(training_set)
-            name_id_dict.update(input_layer[1])
-            print(index, ': ', training_set)
+                if not input_layer:
+                    continue
+                if not expected_output:
+                    continue
+
+                training_set = (input_layer[0], expected_output)
+                dota_training_data_list.append(training_set)
+                name_id_dict.update(input_layer[1])
+                print(index, ': ', training_set)
 
         print("api fetching ended!")
         self.save_to_file("dota_training_set", dota_training_data_list)
@@ -83,6 +93,5 @@ class TrainingDataLoader:
         pass
 
 
-# loader = TrainingDataLoader()
-# loader.generateTrainingDataFile()
-
+#loader = TrainingDataLoader()
+#loader.generateTrainingDataFile()

@@ -76,7 +76,7 @@ class NeuralNetwork:
 
         for i in range(self.epochs):
 
-            if i % 10000 == 0:
+            if i % 1000 == 0:
                 print('In progress: ', i)
 
             shuffle(trainData)
