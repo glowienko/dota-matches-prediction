@@ -1,5 +1,7 @@
 from NeuralNetwork import NeuralNetwork
 from TrainingDataLoader import TrainingDataLoader
+import cProfile
+import re
 
 neural_network = NeuralNetwork()
 data_loader = TrainingDataLoader()
@@ -9,29 +11,32 @@ teams_data = data_loader.loadTeamsFromFile('short_team')
 #
 # print(len(training_data))
 #
-neural_network.init_layers(6, 10, 2)
+neural_network.init_layers(6, 30, 2)
 neural_network.init_weights()
-neural_network.init_parameters(0.01, 100, 100)
+neural_network.init_parameters(0.001, 100000, 10)
 #neural_network.loadState('long_time')
 
-result1 = neural_network.feed_forward([152, 131, 100, 98, 1427.02, 1261.34])
+result1 = neural_network.feed_forward([13, 13, 7, 7, 1047.31, 1073.58])
 print('result 1 : \n', result1)
+
+#profiling
+#cProfile.run('neural_network.train(training_data)', 'array')
 
 neural_network.train(training_data)
 # neural_network.saveState('long_time')
 
-result2 = neural_network.feed_forward([152, 131, 100, 98, 1427.02, 1261.34])
+result2 = neural_network.feed_forward([13, 13, 7, 7, 1047.31, 1073.58])
 print('result 2 : \n', result2)
 
 print('Lets predicate some matches!')
-while True:
-    print('1. Show available teams')
-
-    choice = input('Choice:')
-    if choice == '1':
-        template = '{0:10}{1:10}{2:30}'
-        for key, value in teams_data.items():
-            print(template.format(key, ':', str(value)))
+# while True:
+#     print('1. Show available teams')
+#
+#     choice = input('Choice:')
+#     if choice == '1':
+#         template = '{0:10}{1:10}{2:30}'
+#         for key, value in teams_data.items():
+#             print(template.format(key, ':', str(value)))
 # print('Give first team name')
 # first_team = input()
 # print('Give second team name')

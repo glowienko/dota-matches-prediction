@@ -1,10 +1,11 @@
 from numpy import random, exp, dot, array, power, zeros, newaxis, concatenate
 from random import shuffle
 import json, codecs
+from scipy.special import expit
 
 
 def sigmoid(x):
-    return 1 / (1 + exp(-x))
+    return expit(x)
 
 
 def sigmoid_derivative(x):
@@ -64,20 +65,37 @@ class NeuralNetwork:
         return dq_dw1, dq_dw2
 
     def updateWeights(self, gradient1, gradient2):
-        for i in range(len(self.hidden_weights)):
-            for x in range(len(self.hidden_weights[i])):
-                self.hidden_weights[i, x] = self.hidden_weights[i, x] - self.eta * gradient1[i, x] / self.batch_size
+        self.hidden_weights = self.hidden_weights - self.eta * gradient1 / self.batch_size
+        self.output_weights = self.output_weights - self.eta * gradient2 / self.batch_size
+        # for i in range(len(self.hidden_weights)):
+        #     for x in range(len(self.hidden_weights[i])):
+        #         self.hidden_weights[i, x] = self.hidden_weights[i, x] - self.eta * gradient1[i, x] / self.batch_size
+        #
+        # for i in range(len(self.output_weights)):
+        #     for x in range(len(self.output_weights[i])):
+        #         self.output_weights[i, x] = self.output_weights[i, x] - self.eta * gradient2[i, x] / self.batch_size
 
-        for i in range(len(self.output_weights)):
-            for x in range(len(self.output_weights[i])):
-                self.output_weights[i, x] = self.output_weights[i, x] - self.eta * gradient2[i, x] / self.batch_size
+    def evaluate(self, train_data):
+        success = 0
+        failure = 0
+
+        for training_set in train_data:
+            out = self.feed_forward(training_set[0])
+            if training_set[1][0] > training_set[1][1] and out[0][0] > out[1][0]:
+                success += 1
+            elif training_set[1][0] < training_set[1][1] and out[0][0] < out[1][0]:
+                success += 1
+            else:
+                failure += 1
+        return (success / (failure + success)) * 100
 
     def train(self, trainData):
 
         for i in range(self.epochs):
 
             if i % 1000 == 0:
-                print('In progress: ', i)
+                print('Epoch: ', i, ' | Score: ', self.evaluate(trainData))
+                # print('In progress: ', i)
 
             shuffle(trainData)
 
