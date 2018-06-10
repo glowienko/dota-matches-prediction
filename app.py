@@ -4,8 +4,8 @@ from TrainingDataLoader import TrainingDataLoader
 neural_network = NeuralNetwork()
 data_loader = TrainingDataLoader()
 
-# data_loader.generateTrainingDataFile()
-training_data = data_loader.loadTrainingSetsFromFile('dota_training_set')
+training_data = data_loader.loadTrainingSetsFromFile('short_training')
+teams_data = data_loader.loadTeamsFromFile('short_team')
 #
 # print(len(training_data))
 #
@@ -23,7 +23,15 @@ neural_network.train(training_data)
 result2 = neural_network.feed_forward([152, 131, 100, 98, 1427.02, 1261.34])
 print('result 2 : \n', result2)
 
-# print('Lets predicate some matches!')
+print('Lets predicate some matches!')
+while True:
+    print('1. Show available teams')
+
+    choice = input('Choice:')
+    if choice == '1':
+        template = '{0:10}{1:10}{2:30}'
+        for key, value in teams_data.items():
+            print(template.format(key, ':', str(value)))
 # print('Give first team name')
 # first_team = input()
 # print('Give second team name')

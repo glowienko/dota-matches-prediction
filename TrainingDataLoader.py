@@ -27,7 +27,9 @@ class TrainingDataLoader:
             r_team_id = match['radiant_team_id']
             d_team_id = match['dire_team_id']
             r_team_info = requests.get(self.base_api_url + self.teams + '/' + str(r_team_id)).json()
+            sleep(1)
             d_team_info = requests.get(self.base_api_url + self.teams + '/' + str(d_team_id)).json()
+            sleep(1)
 
             return ([
                         r_team_info['wins'],
@@ -57,19 +59,19 @@ class TrainingDataLoader:
         json.dump(object_to_save, codecs.open(file_name, 'w', encoding='utf-8'))
         print('training sets saved to file!')
 
-    def generateTrainingDataFile(self):
+    def generateTrainingDataFile(self, teamfile, trainingfile):
 
         dota_training_data_list = list()
         name_id_dict = dict()
 
-        for i in range(100):
+        for i in range(1):
             matches = requests.get(
                 self.base_api_url + self.pro_matches + self.query + str(self.last_id - i * 100000)).json()
+            sleep(1)
 
             for index, match in enumerate(matches):
                 input_layer = self.evaluate_input_layer(match)
                 expected_output = self.evaluate_match_results(match)
-                sleep(1.5)
 
                 if not input_layer:
                     continue
@@ -82,16 +84,19 @@ class TrainingDataLoader:
                 print(index, ': ', training_set)
 
         print("api fetching ended!")
-        self.save_to_file("dota_training_set", dota_training_data_list)
-        self.save_to_file("dota_teams", name_id_dict)
+        self.save_to_file(trainingfile, dota_training_data_list)
+        self.save_to_file(teamfile, name_id_dict)
 
     def loadTrainingSetsFromFile(self, filename):
         training_data = codecs.open(filename, 'r', encoding='utf-8').read()
         return json.loads(training_data)
 
+    def loadTeamsFromFile(self, filename):
+        team_data = codecs.open(filename, 'r', encoding='utf-8').read()
+        return json.loads(team_data)
+
     def get_network_input_for_teams(self, first_team, second_team):
         pass
 
-
-#loader = TrainingDataLoader()
-#loader.generateTrainingDataFile()
+# loader = TrainingDataLoader()
+# loader.generateTrainingDataFile('short_team', 'short_training')
