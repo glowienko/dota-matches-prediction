@@ -1,6 +1,7 @@
 import codecs
 import json
 from time import sleep
+from collections import defaultdict
 
 import requests
 
@@ -9,7 +10,7 @@ class TrainingDataLoader:
     base_api_url = 'https://api.opendota.com/api'
     pro_matches = '/proMatches'  # list of matches - playing teams id, match duration, match result
     teams = '/teams'  # list of teams - id, rating, wins, losses
-    last_id = 3942922478
+    last_id = 3944966018
     query = '?less_than_match_id='
 
     def evaluate_match_results(self, match):
@@ -33,10 +34,10 @@ class TrainingDataLoader:
 
             return ([
                         r_team_info['wins'],
-                        d_team_info['wins'],
                         r_team_info['losses'],
-                        d_team_info['losses'],
                         r_team_info['rating'],
+                        d_team_info['wins'],
+                        d_team_info['losses'],
                         d_team_info['rating']],
                     {
                         r_team_id:
@@ -59,15 +60,17 @@ class TrainingDataLoader:
         json.dump(object_to_save, codecs.open(file_name, 'w', encoding='utf-8'))
         print('training sets saved to file!')
 
-    def generateTrainingDataFile(self, teamfile, trainingfile):
+    def generateTrainingDataFile(self, teamfile, trainingfile, team_strike_file):
 
         dota_training_data_list = list()
-        name_id_dict = dict()
+        teams_dict = dict()
+        teams_last_games = defaultdict(list)
 
-        for i in range(1):
+        for i in range(2):
             matches = requests.get(
-                self.base_api_url + self.pro_matches + self.query + str(self.last_id - i * 100000)).json()
+                self.base_api_url + self.pro_matches + self.query + str(self.last_id)).json()
             sleep(1)
+            self.last_id = matches[len(matches) - 1]['match_id']
 
             for index, match in enumerate(matches):
                 input_layer = self.evaluate_input_layer(match)
@@ -80,12 +83,15 @@ class TrainingDataLoader:
 
                 training_set = (input_layer[0], expected_output)
                 dota_training_data_list.append(training_set)
-                name_id_dict.update(input_layer[1])
+                teams_dict.update(input_layer[1])
+                teams_last_games[match['radiant_team_id']].append(match['radiant_win'])
+                teams_last_games[match['dire_team_id']].append(not match['radiant_win'])
                 print(index, ': ', training_set)
 
         print("api fetching ended!")
         self.save_to_file(trainingfile, dota_training_data_list)
-        self.save_to_file(teamfile, name_id_dict)
+        self.save_to_file(teamfile, teams_dict)
+        self.save_to_file(team_strike_file, teams_last_games)
 
     def loadTrainingSetsFromFile(self, filename):
         training_data = codecs.open(filename, 'r', encoding='utf-8').read()
@@ -98,5 +104,6 @@ class TrainingDataLoader:
     def get_network_input_for_teams(self, first_team, second_team):
         pass
 
-# loader = TrainingDataLoader()
-# loader.generateTrainingDataFile('short_team', 'short_training')
+
+loader = TrainingDataLoader()
+loader.generateTrainingDataFile('teams_map', 'training_data', 'teams_strike')
