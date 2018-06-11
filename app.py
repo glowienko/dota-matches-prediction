@@ -12,9 +12,9 @@ teams_data = data_loader.loadTeamsFromFile('teams_map2')
 
 print(len(training_data))
 
-neural_network.init_layers(6, 20, 2)
+neural_network.init_layers(6, 50, 2)
 neural_network.init_weights()
-neural_network.init_parameters(0.001, 1000, 20)
+neural_network.init_parameters(0.001, 10000, 30)
 # neural_network.loadState('long_time')
 
 result1 = neural_network.feed_forward(array([27, 10, 1147.18, 16, 6, 1160.66]))
@@ -26,6 +26,7 @@ print('result 1 : \n', result1)
 start = time.time()
 neural_network.train(array(training_data))
 duration = time.time() - start
+neural_network.saveState('Saved_states/et0001ep10000b30n50')
 
 result2 = neural_network.feed_forward(array([27, 10, 1147.18, 16, 6, 1160.66]))
 print('result 2 : \n', result2)
