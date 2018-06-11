@@ -12,6 +12,10 @@ class TrainingDataLoader:
     teams = '/teams'  # list of teams - id, rating, wins, losses
     last_id = 3944966018
     query = '?less_than_match_id='
+    https_proxy = "193.239.38.229:8080"
+    proxyDict = {
+        "https": https_proxy
+    }
 
     def evaluate_match_results(self, match):
         try:
@@ -27,9 +31,11 @@ class TrainingDataLoader:
         try:
             r_team_id = match['radiant_team_id']
             d_team_id = match['dire_team_id']
-            r_team_info = requests.get(self.base_api_url + self.teams + '/' + str(r_team_id)).json()
+            r_team_info = requests.get(self.base_api_url + self.teams + '/' + str(r_team_id),
+                                       proxies=self.proxyDict).json()
             sleep(1)
-            d_team_info = requests.get(self.base_api_url + self.teams + '/' + str(d_team_id)).json()
+            d_team_info = requests.get(self.base_api_url + self.teams + '/' + str(d_team_id),
+                                       proxies=self.proxyDict).json()
             sleep(1)
 
             return ([
@@ -66,11 +72,10 @@ class TrainingDataLoader:
         teams_dict = dict()
         teams_last_games = defaultdict(list)
 
-        for i in range(2):
+        for i in range(150):
             matches = requests.get(
-                self.base_api_url + self.pro_matches + self.query + str(self.last_id)).json()
+                self.base_api_url + self.pro_matches + self.query + str(self.last_id), proxies=self.proxyDict).json()
             sleep(1)
-            self.last_id = matches[len(matches) - 1]['match_id']
 
             for index, match in enumerate(matches):
                 input_layer = self.evaluate_input_layer(match)
@@ -80,6 +85,8 @@ class TrainingDataLoader:
                     continue
                 if not expected_output:
                     continue
+
+                self.last_id = match['match_id']
 
                 training_set = (input_layer[0], expected_output)
                 dota_training_data_list.append(training_set)
