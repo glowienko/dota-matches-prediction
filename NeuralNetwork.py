@@ -17,10 +17,11 @@ class NeuralNetwork:
         self.output_weights = 2 * random.random(
             (self.output_layer_neuron_number, self.hidden_layer_neuron_number + 1)) - 1
 
-    def init_parameters(self, eta, epochs, batch_size):
+    def init_parameters(self, eta, epochs, batch_size, beta):
         self.eta = eta
         self.epochs = epochs
         self.batch_size = batch_size
+        self.beta = beta
 
     def sigmoid(self, x):
         return expit(x)
@@ -62,9 +63,11 @@ class NeuralNetwork:
 
         return dq_dw1, dq_dw2
 
-    def updateWeights(self, gradient1, gradient2):
-        self.hidden_weights = self.hidden_weights - self.eta * gradient1 / self.batch_size
-        self.output_weights = self.output_weights - self.eta * gradient2 / self.batch_size
+    def updateWeights(self, gradient1, gradient2, momentum1, momentum2):
+        momentum1 = momentum1 * self.beta + (1 - self.beta) * gradient1 / self.batch_size
+        momentum2 = momentum2 * self.beta + (1 - self.beta) * gradient2 / self.batch_size
+        self.hidden_weights = self.hidden_weights - self.eta * momentum1
+        self.output_weights = self.output_weights - self.eta * momentum2
 
     def evaluate(self, train_data):
         success = 0
@@ -82,13 +85,17 @@ class NeuralNetwork:
 
     def train(self, trainData):
 
-        for i in range(self.epochs):
 
-            if i % 10 == 0:
+        for i in range(self.epochs):
+            momentum1 = zeros(self.hidden_weights.shape)
+            momentum2 = zeros(self.output_weights.shape)
+
+            if i % 1 == 0:
                 print('Epoch: ', i, ' | Score: ', self.evaluate(trainData))
                 # print('In progress: ', i)
 
             random.shuffle(trainData)
+
 
             for batch_num in range(0, len(trainData), self.batch_size):
 
@@ -103,7 +110,7 @@ class NeuralNetwork:
                     g1 = g1 + tg1
                     g2 = g2 + tg2
 
-                self.updateWeights(g1, g2)
+                self.updateWeights(g1, g2, momentum1, momentum2)
 
     def saveState(self, fileName):
         state = {'first_weights': self.hidden_weights.tolist(),

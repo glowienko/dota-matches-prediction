@@ -135,5 +135,5 @@ class TrainingDataLoader:
         pass
 
 
-loader = TrainingDataLoader()
-loader.generateTrainingDataFile('teams_map_my_new_1', 'training_data_my_new_1', 'teams_strike_my_new_1')
+#loader = TrainingDataLoader()
+#loader.generateTrainingDataFile('teams_map_my_new_1', 'training_data_my_new_1', 'teams_strike_my_new_1')
