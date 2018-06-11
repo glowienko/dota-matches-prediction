@@ -31,11 +31,9 @@ class TrainingDataLoader:
         try:
             r_team_id = match['radiant_team_id']
             d_team_id = match['dire_team_id']
-            r_team_info = requests.get(self.base_api_url + self.teams + '/' + str(r_team_id),
-                                       proxies=self.proxyDict).json()
+            r_team_info = requests.get(self.base_api_url + self.teams + '/' + str(r_team_id)).json()
             sleep(1)
-            d_team_info = requests.get(self.base_api_url + self.teams + '/' + str(d_team_id),
-                                       proxies=self.proxyDict).json()
+            d_team_info = requests.get(self.base_api_url + self.teams + '/' + str(d_team_id)).json()
             sleep(1)
 
             return ([
@@ -64,7 +62,6 @@ class TrainingDataLoader:
     def save_to_file(self, file_name, object_to_save):
         # first we should write line with : y0 = 8, y1 = eg. 20, y2 = 2
         json.dump(object_to_save, codecs.open(file_name, 'w', encoding='utf-8'))
-        print('training sets saved to file!')
 
     def generateTrainingDataFile(self, teamfile, trainingfile, team_strike_file):
 
@@ -72,9 +69,9 @@ class TrainingDataLoader:
         teams_dict = dict()
         teams_last_games = defaultdict(list)
 
-        for i in range(150):
+        for i in range(10000):
             matches = requests.get(
-                self.base_api_url + self.pro_matches + self.query + str(self.last_id), proxies=self.proxyDict).json()
+                self.base_api_url + self.pro_matches + self.query + str(self.last_id)).json()
             sleep(1)
 
             for index, match in enumerate(matches):
@@ -93,7 +90,11 @@ class TrainingDataLoader:
                 teams_dict.update(input_layer[1])
                 teams_last_games[match['radiant_team_id']].append(match['radiant_win'])
                 teams_last_games[match['dire_team_id']].append(not match['radiant_win'])
+                self.save_to_file(trainingfile, dota_training_data_list)
+                self.save_to_file(teamfile, teams_dict)
+                self.save_to_file(team_strike_file, teams_last_games)
                 print(index, ': ', training_set)
+            print('i:', i)
 
         print("api fetching ended!")
         self.save_to_file(trainingfile, dota_training_data_list)
@@ -113,4 +114,4 @@ class TrainingDataLoader:
 
 
 loader = TrainingDataLoader()
-loader.generateTrainingDataFile('teams_map', 'training_data', 'teams_strike')
+loader.generateTrainingDataFile('teams_map2', 'training_data2', 'teams_strike2')
