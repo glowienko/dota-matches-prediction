@@ -84,14 +84,18 @@ class NeuralNetwork:
         return (success / (failure + success)) * 100
 
     def train(self, trainData):
+        epochs = []
+        scores = []
 
         for i in range(self.epochs):
             self.momentum1 = zeros(self.hidden_weights.shape)
             self.momentum2 = zeros(self.output_weights.shape)
 
-            if i % 100 == 0:
-                print('Epoch: ', i, ' | Score: ', self.evaluate(trainData))
-                # print('In progress: ', i)
+            epochs.append(i)
+            scores.append(self.evaluate(trainData))
+            # if i % 1 == 0:
+                # print('Epoch: ', i, ' | Score: ', self.evaluate(trainData))
+                # print('In progress, kappa: ', i)
 
             random.shuffle(trainData)
 
@@ -109,6 +113,13 @@ class NeuralNetwork:
                     g2 = g2 + tg2
 
                 self.updateWeights(g1, g2)
+        self.printArrayInGraphFormat(epochs, "Epochs:")
+        self.printArrayInGraphFormat(scores, "Scores:")
+
+    def printArrayInGraphFormat(self, array, printed_data_name):
+        print(printed_data_name)
+        for item in array:
+            print(item)
 
     def normalize(self, oldMax, oldMin, value):
         oldRange = oldMax - oldMin

@@ -234,7 +234,7 @@ class TrainingDataLoader:
     def normalize(self, oldMax, oldMin, value):
         oldRange = oldMax - oldMin
         newRange = 1
-        return (((value - oldMin) * newRange) / oldRange) + 0
+        return ((value - oldMin) * newRange) / oldRange
 
     def loadFromFile(self, filename):
         training_data = codecs.open(filename, 'r', encoding='utf-8').read()
@@ -253,5 +253,15 @@ class TrainingDataLoader:
 # teams = loader.loadFromFile('teams2')
 # loader.generateTrainingData('training_sets2', matches, players, teams)
 
-
+# loader = TrainingDataLoader()
+# loader.generateTeams('teams_new_1', 50)
+# teams = loader.loadFromFile('teams_new_1')
+# loader.generateMatches('matches_new_1', 'teams_new_1', teams, 10)
+# matches = loader.loadFromFile('matches_new_1')
+# loader.generatePlayers('players_new_1', matches)
+# players = loader.loadFromFile('players_new_1')
+# teams = loader.loadFromFile('teams_new_1')
+# loader.generateTrainingData('training_sets_new_1', matches, players, teams)
+#
+#
 # loader.generateTrainingDataFile('teams_map_my_new_1', 'training_data_my_new_1', 'teams_strike_my_new_1')
