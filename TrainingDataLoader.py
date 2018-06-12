@@ -123,17 +123,131 @@ class TrainingDataLoader:
         self.save_to_file(teamfile, teams_dict)
         self.save_to_file(team_strike_file, teams_last_games)
 
-    def loadTrainingSetsFromFile(self, filename):
+    def generateTeams(self, filename, teams_number):
+        sleep(1)
+        teams = requests.get('https://api.opendota.com/api/teams').json()
+        teams_dict = defaultdict(dict)
+        for i in range(teams_number):
+            item = dict(teams[i])
+            team_id = item.pop('team_id')
+            teams_dict[team_id].update(item)
+            print(item)
+        self.save_to_file(filename, teams_dict)
+
+    def generateMatches(self, matches_file, teams_file, teams, matches_per_team):
+        teams_dict = defaultdict(dict)
+        teams_dict.update(teams)
+
+        matches_dict = defaultdict(dict)
+        for team in teams.keys():
+            sleep(1)
+            matches = requests.get('https://api.opendota.com/api/teams/{}/matches'.format(team)).json()
+            for i in range(matches_per_team):
+                try:
+                    sleep(1)
+                    match = requests.get(
+                        'https://api.opendota.com/api/matches/{}'.format(matches[i]['match_id'])).json()
+                    match_id = match.pop('match_id')
+                    match_stat = dict()
+                    radiant_team_id = match['radiant_team_id']
+                    dire_team_id = match['dire_team_id']
+                    match_stat.update({'dire_team_id': dire_team_id})
+                    match_stat.update({'radiant_team_id': radiant_team_id})
+                    match_stat.update({'radiant_win': match['radiant_win']})
+
+                    if str(radiant_team_id) not in teams_dict:
+                        sleep(1)
+                        team = requests.get('https://api.opendota.com/api/teams/{}'.format(radiant_team_id)).json()
+                        team_id = team.pop('team_id')
+                        teams_dict[team_id].update(team)
+
+                    elif str(dire_team_id) not in teams_dict:
+                        sleep(1)
+                        team = requests.get('https://api.opendota.com/api/teams/{}'.format(dire_team_id)).json()
+                        team_id = team.pop('team_id')
+                        teams_dict[team_id].update(team)
+
+                    for x in range(10):
+                        match_stat.update({'player{}'.format(x): match['players'][x]['account_id']})
+                        match_stat.update({'isRadiant{}'.format(x): match['players'][x]['isRadiant']})
+                    matches_dict[match_id].update(match_stat)
+                    print(match_stat)
+                except:
+                    continue
+        self.save_to_file(matches_file, matches_dict)
+        self.save_to_file(teams_file, teams_dict)
+
+    def generatePlayers(self, filename, matches):
+        players_dict = defaultdict(dict)
+        for match in matches.values():
+            for i in range(10):
+                try:
+                    player_dict = dict()
+                    player_id = match['player{}'.format(i)]
+                    if player_id in players_dict:
+                        continue
+                    sleep(1)
+                    player = requests.get('https://api.opendota.com/api/players/{}'.format(player_id)).json()
+                    sleep(1)
+                    wl = requests.get('https://api.opendota.com/api/players/{}/wl?date=50'.format(player_id)).json()
+                    player_dict.update({'name': player['profile']['name']})
+                    player_dict.update({'mmr': player['mmr_estimate']['estimate']})
+                    player_dict.update({'win': wl['win']})
+                    player_dict.update({'lose': wl['lose']})
+                    players_dict[player_id].update(player_dict)
+                    print(player_dict)
+                except:
+                    continue
+        self.save_to_file(filename, players_dict)
+
+    def generateTrainingData(self, filename, matches, players, teams):
+        training_sets = list()
+        for match in matches.values():
+            input_data = list()
+
+            radiant_team = teams.get(str(match['radiant_team_id']))
+            input_data.append(radiant_team['rating']/1000)
+            input_data.append(radiant_team['wins'] / radiant_team['losses'])
+            for i in range(10):
+                if not match['isRadiant{}'.format(i)]:
+                    continue
+                player_id = match['player{}'.format(i)]
+                player = players.get(str(player_id))
+                input_data.append(player['mmr']/1000)
+                input_data.append(player['win'] / player['lose'])
+
+            dire_team = teams.get(str(match['dire_team_id']))
+            input_data.append(dire_team['rating']/1000)
+            input_data.append(dire_team['wins'] / dire_team['losses'])
+            for i in range(10):
+                if match['isRadiant{}'.format(i)]:
+                    continue
+                player_id = match['player{}'.format(i)]
+                player = players.get(str(player_id))
+                input_data.append(player['mmr']/1000)
+                input_data.append(player['win'] / player['lose'])
+
+            result = self.evaluate_match_results(match)
+            training_sets.append((input_data, result))
+        self.save_to_file(filename, training_sets)
+
+    def loadFromFile(self, filename):
         training_data = codecs.open(filename, 'r', encoding='utf-8').read()
         return json.loads(training_data)
-
-    def loadTeamsFromFile(self, filename):
-        team_data = codecs.open(filename, 'r', encoding='utf-8').read()
-        return json.loads(team_data)
 
     def get_network_input_for_teams(self, first_team, second_team):
         pass
 
 
 #loader = TrainingDataLoader()
-#loader.generateTrainingDataFile('teams_map_my_new_1', 'training_data_my_new_1', 'teams_strike_my_new_1')
+#loader.generateTeams('teams', 10)
+#teams = loader.loadFromFile('teams')
+#loader.generateMatches('matches', 'teams', teams, 10)
+#matches = loader.loadFromFile('matches')
+# loader.generatePlayers('players', matches)
+#players = loader.loadFromFile('players')
+#teams = loader.loadFromFile('teams')
+#loader.generateTrainingData('training_sets', matches, players, teams)
+
+
+# loader.generateTrainingDataFile('teams_map_my_new_1', 'training_data_my_new_1', 'teams_strike_my_new_1')
