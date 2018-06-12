@@ -89,7 +89,7 @@ class NeuralNetwork:
             momentum1 = zeros(self.hidden_weights.shape)
             momentum2 = zeros(self.output_weights.shape)
 
-            if i % 1 == 0:
+            if i % 100 == 0:
                 print('Epoch: ', i, ' | Score: ', self.evaluate(trainData))
                 # print('In progress: ', i)
 

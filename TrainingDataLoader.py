@@ -243,15 +243,15 @@ class TrainingDataLoader:
     def get_network_input_for_teams(self, first_team, second_team):
         pass
 
-loader = TrainingDataLoader()
-loader.generateTeams('teams2', 50)
-teams = loader.loadFromFile('teams2')
-loader.generateMatches('matches2', 'teams2', teams, 10)
-matches = loader.loadFromFile('matches2')
-loader.generatePlayers('players2', matches)
-players = loader.loadFromFile('players2')
-teams = loader.loadFromFile('teams2')
-loader.generateTrainingData('training_sets2', matches, players, teams)
+# loader = TrainingDataLoader()
+# loader.generateTeams('teams2', 50)
+# teams = loader.loadFromFile('teams2')
+# loader.generateMatches('matches2', 'teams2', teams, 10)
+# matches = loader.loadFromFile('matches2')
+# loader.generatePlayers('players2', matches)
+# players = loader.loadFromFile('players2')
+# teams = loader.loadFromFile('teams2')
+# loader.generateTrainingData('training_sets2', matches, players, teams)
 
 
 # loader.generateTrainingDataFile('teams_map_my_new_1', 'training_data_my_new_1', 'teams_strike_my_new_1')
