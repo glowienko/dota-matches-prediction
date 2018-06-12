@@ -14,7 +14,7 @@ players_data = data_loader.loadFromFile('players2')
 
 neural_network.init_layers(24, 50, 2)
 neural_network.init_weights()
-neural_network.init_parameters(0.01, 100, 5, 0.9)
+neural_network.init_parameters(0.001, 10000, 10, 0.9)
 
 
 start = time.time()

@@ -63,11 +63,11 @@ class NeuralNetwork:
 
         return dq_dw1, dq_dw2
 
-    def updateWeights(self, gradient1, gradient2, momentum1, momentum2):
-        momentum1 = momentum1 * self.beta + (1 - self.beta) * gradient1 / self.batch_size
-        momentum2 = momentum2 * self.beta + (1 - self.beta) * gradient2 / self.batch_size
-        self.hidden_weights = self.hidden_weights - self.eta * momentum1
-        self.output_weights = self.output_weights - self.eta * momentum2
+    def updateWeights(self, gradient1, gradient2):
+        self.momentum1 = self.momentum1 * self.beta + (1 - self.beta) * gradient1 / self.batch_size
+        self.momentum2 = self.momentum2 * self.beta + (1 - self.beta) * gradient2 / self.batch_size
+        self.hidden_weights = self.hidden_weights - self.eta * self.momentum1
+        self.output_weights = self.output_weights - self.eta * self.momentum2
 
     def evaluate(self, train_data):
         success = 0
@@ -86,8 +86,8 @@ class NeuralNetwork:
     def train(self, trainData):
 
         for i in range(self.epochs):
-            momentum1 = zeros(self.hidden_weights.shape)
-            momentum2 = zeros(self.output_weights.shape)
+            self.momentum1 = zeros(self.hidden_weights.shape)
+            self.momentum2 = zeros(self.output_weights.shape)
 
             if i % 100 == 0:
                 print('Epoch: ', i, ' | Score: ', self.evaluate(trainData))
@@ -108,7 +108,7 @@ class NeuralNetwork:
                     g1 = g1 + tg1
                     g2 = g2 + tg2
 
-                self.updateWeights(g1, g2, momentum1, momentum2)
+                self.updateWeights(g1, g2)
 
     def normalize(self, oldMax, oldMin, value):
         oldRange = oldMax - oldMin
