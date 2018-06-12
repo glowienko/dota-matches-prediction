@@ -1,4 +1,4 @@
-from numpy import random, exp, dot, array, power, zeros, newaxis, concatenate
+from numpy import random, exp, dot, array, power, zeros, newaxis, concatenate, sqrt
 from random import shuffle
 import json, codecs
 from scipy.special import expit
@@ -12,10 +12,10 @@ class NeuralNetwork:
         self.output_layer_neuron_number = third_layer_neurons_number
 
     def init_weights(self):
-        self.hidden_weights = 2 * random.random(
-            (self.hidden_layer_neuron_number, self.input_layer_neuron_number + 1)) - 1
-        self.output_weights = 2 * random.random(
-            (self.output_layer_neuron_number, self.hidden_layer_neuron_number + 1)) - 1
+        self.hidden_weights = 4 * random.random(
+            (self.hidden_layer_neuron_number, self.input_layer_neuron_number + 1)) - 2
+        self.output_weights = 0 * random.random(
+            (self.output_layer_neuron_number, self.hidden_layer_neuron_number + 1))
 
     def init_parameters(self, eta, epochs, batch_size, beta):
         self.eta = eta
@@ -37,7 +37,7 @@ class NeuralNetwork:
         y1 = concatenate((y1, [[1]]))
         s2 = dot(self.output_weights, y1)
         y2 = s2  # activation function is linear
-        return y2
+        return self.normalize(1, 0, y2)
 
     def backpropagate(self, inputData, expectedOutput):
 
@@ -51,7 +51,7 @@ class NeuralNetwork:
         y1 = self.sigmoid(s1)
         y1 = concatenate((y1, [[1]]))
         s2 = dot(self.output_weights, y1)
-        y2 = s2  # activation function is linear
+        y2 = self.normalize(1, 0, s2)  # activation function is linear
 
         dq_dy2 = (y2 - expectedOutput)
         dq_ds2 = dq_dy2
@@ -85,7 +85,6 @@ class NeuralNetwork:
 
     def train(self, trainData):
 
-
         for i in range(self.epochs):
             momentum1 = zeros(self.hidden_weights.shape)
             momentum2 = zeros(self.output_weights.shape)
@@ -95,7 +94,6 @@ class NeuralNetwork:
                 # print('In progress: ', i)
 
             random.shuffle(trainData)
-
 
             for batch_num in range(0, len(trainData), self.batch_size):
 
@@ -111,6 +109,11 @@ class NeuralNetwork:
                     g2 = g2 + tg2
 
                 self.updateWeights(g1, g2, momentum1, momentum2)
+
+    def normalize(self, oldMax, oldMin, value):
+        oldRange = oldMax - oldMin
+        newRange = sqrt(self.hidden_layer_neuron_number) + sqrt(self.hidden_layer_neuron_number)
+        return (((value - oldMin) * newRange) / oldRange) - sqrt(self.hidden_layer_neuron_number)
 
     def saveState(self, fileName):
         state = {'first_weights': self.hidden_weights.tolist(),

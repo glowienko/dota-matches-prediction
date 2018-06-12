@@ -206,30 +206,35 @@ class TrainingDataLoader:
             input_data = list()
 
             radiant_team = teams.get(str(match['radiant_team_id']))
-            input_data.append(radiant_team['rating']/1000)
-            input_data.append(radiant_team['wins'] / radiant_team['losses'])
+            input_data.append(self.normalize(2000, 0, radiant_team['rating']))
+            input_data.append(radiant_team['wins'] / (radiant_team['losses'] + radiant_team['wins']))
             for i in range(10):
                 if not match['isRadiant{}'.format(i)]:
                     continue
                 player_id = match['player{}'.format(i)]
                 player = players.get(str(player_id))
-                input_data.append(player['mmr']/1000)
-                input_data.append(player['win'] / player['lose'])
+                input_data.append(self.normalize(10000, 0, player['mmr']))
+                input_data.append(player['win'] / (player['lose'] + player['win']))
 
             dire_team = teams.get(str(match['dire_team_id']))
-            input_data.append(dire_team['rating']/1000)
-            input_data.append(dire_team['wins'] / dire_team['losses'])
+            input_data.append(self.normalize(2000, 0 ,dire_team['rating']))
+            input_data.append(dire_team['wins'] / (dire_team['losses'] + dire_team['losses']))
             for i in range(10):
                 if match['isRadiant{}'.format(i)]:
                     continue
                 player_id = match['player{}'.format(i)]
                 player = players.get(str(player_id))
-                input_data.append(player['mmr']/1000)
-                input_data.append(player['win'] / player['lose'])
+                input_data.append(self.normalize(10000, 0, player['mmr']))
+                input_data.append(player['win'] / (player['lose'] + player['win']))
 
             result = self.evaluate_match_results(match)
             training_sets.append((input_data, result))
         self.save_to_file(filename, training_sets)
+
+    def normalize(self, oldMax, oldMin, value):
+        oldRange = oldMax - oldMin
+        newRange = 1
+        return (((value - oldMin) * newRange) / oldRange) + 0
 
     def loadFromFile(self, filename):
         training_data = codecs.open(filename, 'r', encoding='utf-8').read()
@@ -238,16 +243,15 @@ class TrainingDataLoader:
     def get_network_input_for_teams(self, first_team, second_team):
         pass
 
-
-#loader = TrainingDataLoader()
-#loader.generateTeams('teams', 10)
-#teams = loader.loadFromFile('teams')
-#loader.generateMatches('matches', 'teams', teams, 10)
-#matches = loader.loadFromFile('matches')
-# loader.generatePlayers('players', matches)
-#players = loader.loadFromFile('players')
-#teams = loader.loadFromFile('teams')
-#loader.generateTrainingData('training_sets', matches, players, teams)
+loader = TrainingDataLoader()
+loader.generateTeams('teams2', 50)
+teams = loader.loadFromFile('teams2')
+loader.generateMatches('matches2', 'teams2', teams, 10)
+matches = loader.loadFromFile('matches2')
+loader.generatePlayers('players2', matches)
+players = loader.loadFromFile('players2')
+teams = loader.loadFromFile('teams2')
+loader.generateTrainingData('training_sets2', matches, players, teams)
 
 
 # loader.generateTrainingDataFile('teams_map_my_new_1', 'training_data_my_new_1', 'teams_strike_my_new_1')
